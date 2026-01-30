@@ -3,7 +3,7 @@ Balance Analyzer Module
 Analyzes load distribution and detects imbalances
 """
 
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import numpy as np
 import logging
 
