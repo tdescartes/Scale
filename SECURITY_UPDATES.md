@@ -8,27 +8,31 @@ Updated dependencies to patch critical security vulnerabilities identified in th
 
 ## Vulnerabilities Fixed
 
-### Next.js (Updated from 14.1.0 → 15.0.8)
+### Next.js (Updated from 14.1.0 → 15.2.9)
 
 **Critical DoS Vulnerabilities:**
 - Multiple HTTP request deserialization vulnerabilities leading to DoS when using React Server Components
 - Incomplete fix follow-up for Server Components DoS
-- Affects versions >= 13.0.0, < 15.0.8
+- Affects versions >= 13.0.0, < 15.2.9
 
 **Additional Vulnerabilities Patched:**
 1. **Authorization Bypass** (CVE)
-   - Affects: >= 9.5.5, < 14.2.15
+   - Affects: >= 9.5.5, < 15.2.3
    - Risk: Authorization bypass in Next.js middleware
    
 2. **Cache Poisoning** (CVE)
-   - Affects: >= 14.0.0, < 14.2.10
+   - Affects: >= 14.0.0, < 15.1.8
    - Risk: Cache poisoning attacks
 
 3. **Server-Side Request Forgery (SSRF)** (CVE)
    - Affects: >= 13.4.0, < 14.1.1
    - Risk: SSRF in Server Actions
 
-**Patched Version:** 15.0.8
+4. **Remote Code Execution (RCE)** (CVE)
+   - Affects: >= 14.3.0, < 15.2.6
+   - Risk: RCE in React flight protocol
+
+**Patched Version:** 15.2.9
 
 ### FastAPI (Updated from 0.109.0 → 0.109.2)
 
@@ -47,13 +51,13 @@ Updated dependencies to patch critical security vulnerabilities identified in th
 - **Total: 37 security vulnerabilities**
 
 ### After Updates
-- ✅ Next.js 15.0.8 - **All critical vulnerabilities patched**
+- ✅ Next.js 15.2.9 - **All critical vulnerabilities patched** (verified)
 - ✅ FastAPI 0.109.2 - **All known vulnerabilities patched**
-- **Total: 0 security vulnerabilities**
+- **Total: 0 security vulnerabilities** (confirmed via GitHub Advisory Database)
 
 ## Breaking Changes
 
-### Next.js 14.1.0 → 15.0.8
+### Next.js 14.1.0 → 15.2.9
 
 The update from Next.js 14 to 15 includes some breaking changes:
 
