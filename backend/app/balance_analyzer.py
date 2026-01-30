@@ -9,6 +9,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Constants for balance analysis
+CV_THRESHOLD = 0.5  # Coefficient of Variation threshold for balance scoring
+OVERLOAD_MULTIPLIER = 1.2  # Threshold multiplier for detecting overloaded pods
+UNDERLOAD_MULTIPLIER = 0.8  # Threshold multiplier for detecting underloaded pods
+
 
 class BalanceAnalyzer:
     """Analyze load balance across backend pods"""
@@ -48,8 +53,8 @@ class BalanceAnalyzer:
         
         # Convert CV to balance score (lower CV = better balance)
         # CV of 0.0 -> score 1.0 (perfect balance)
-        # CV of 0.5 -> score 0.0 (poor balance)
-        balance_score = max(0.0, 1.0 - (cv / 0.5))
+        # CV >= CV_THRESHOLD -> score 0.0 (poor balance)
+        balance_score = max(0.0, 1.0 - (cv / CV_THRESHOLD))
         
         logger.info(f"Balance score: {balance_score:.3f} (CV: {cv:.3f})")
         return balance_score
@@ -70,11 +75,11 @@ class BalanceAnalyzer:
             
             overloaded_pods = [
                 pod for pod in pods 
-                if pod["requests"] > mean_requests * 1.2
+                if pod["requests"] > mean_requests * OVERLOAD_MULTIPLIER
             ]
             underloaded_pods = [
                 pod for pod in pods 
-                if pod["requests"] < mean_requests * 0.8
+                if pod["requests"] < mean_requests * UNDERLOAD_MULTIPLIER
             ]
             
             return {

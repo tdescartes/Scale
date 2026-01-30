@@ -4,6 +4,7 @@ Collects metrics from NGINX Ingress Controller
 """
 
 import asyncio
+import time
 from typing import Dict, Any, List, Optional
 import logging
 
@@ -60,7 +61,7 @@ class K8sMonitor:
         return {
             "pods": pods,
             "total_requests": sum(p["requests"] for p in pods),
-            "timestamp": asyncio.get_event_loop().time()
+            "timestamp": time.time()
         }
     
     async def get_ingress_config(self) -> Dict[str, Any]:

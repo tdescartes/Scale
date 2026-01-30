@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
 import asyncio
+import time
 from typing import List, Dict, Any
 import json
 import logging
@@ -39,9 +40,6 @@ scenario_generator = ScenarioGenerator()
 balance_analyzer = BalanceAnalyzer()
 failure_injector = FailureInjector()
 
-# WebSocket connections for real-time updates
-active_connections: List[WebSocket] = []
-
 
 class ConnectionManager:
     def __init__(self):
@@ -52,7 +50,8 @@ class ConnectionManager:
         self.active_connections.append(websocket)
 
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
 
     async def broadcast(self, message: dict):
         for connection in self.active_connections:
@@ -79,6 +78,18 @@ async def health_check():
 async def start_load_test(config: Dict[str, Any]):
     """Start a new load test with specified configuration"""
     try:
+        # Validate configuration
+        users = config.get("users", 10)
+        spawn_rate = config.get("spawn_rate", 1)
+        duration = config.get("duration", 60)
+        
+        if users <= 0 or users > 10000:
+            return JSONResponse(status_code=400, content={"error": "Users must be between 1 and 10000"})
+        if spawn_rate <= 0 or spawn_rate > 1000:
+            return JSONResponse(status_code=400, content={"error": "Spawn rate must be between 1 and 1000"})
+        if duration <= 0 or duration > 3600:
+            return JSONResponse(status_code=400, content={"error": "Duration must be between 1 and 3600 seconds"})
+        
         test_id = await load_generator.start_test(config)
         return {"test_id": test_id, "status": "started"}
     except Exception as e:
@@ -139,6 +150,21 @@ async def generate_scenario(params: Dict[str, Any]):
 async def inject_failure(config: Dict[str, Any]):
     """Inject a failure scenario"""
     try:
+        # Validate failure configuration
+        failure_type = config.get("type", "latency")
+        severity = config.get("severity", "medium")
+        duration = config.get("duration", 60)
+        
+        valid_types = ["latency", "error", "pod_failure", "network_partition"]
+        valid_severities = ["low", "medium", "high"]
+        
+        if failure_type not in valid_types:
+            return JSONResponse(status_code=400, content={"error": f"Invalid failure type. Must be one of: {valid_types}"})
+        if severity not in valid_severities:
+            return JSONResponse(status_code=400, content={"error": f"Invalid severity. Must be one of: {valid_severities}"})
+        if duration <= 0 or duration > 3600:
+            return JSONResponse(status_code=400, content={"error": "Duration must be between 1 and 3600 seconds"})
+        
         result = await failure_injector.inject(config)
         return {"result": result}
     except Exception as e:
@@ -177,7 +203,7 @@ async def websocket_metrics(websocket: WebSocket):
                 "data": {
                     "metrics": metrics,
                     "balance_score": balance_score,
-                    "timestamp": asyncio.get_event_loop().time()
+                    "timestamp": time.time()
                 }
             })
             

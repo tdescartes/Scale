@@ -5,6 +5,7 @@ Uses Locust for HTTP load generation with multiprocessing support
 
 import asyncio
 import uuid
+import time
 from typing import Dict, Any, Optional
 import multiprocessing as mp
 from locust import HttpUser, task, between
@@ -57,7 +58,7 @@ class LoadGenerator:
         self.active_tests[test_id] = {
             "config": config,
             "status": "running",
-            "start_time": asyncio.get_event_loop().time()
+            "start_time": time.time()
         }
         
         # Start load test in separate process

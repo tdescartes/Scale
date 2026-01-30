@@ -2,25 +2,30 @@
 
 import { useState } from 'react';
 import axios from 'axios';
+import { API_CONFIG } from '../lib/config';
 
 export default function ControlPanel() {
   const [failureType, setFailureType] = useState('latency');
   const [failureSeverity, setFailureSeverity] = useState('medium');
   const [failureDuration, setFailureDuration] = useState(60);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const handleInjectFailure = async () => {
+    setError(null);
+    setSuccess(null);
     try {
-      const response = await axios.post('http://localhost:8000/api/failure/inject', {
+      const response = await axios.post(`${API_CONFIG.apiUrl}/api/failure/inject`, {
         type: failureType,
         severity: failureSeverity,
         duration: failureDuration,
         target: 'random',
       });
       
-      alert(`Failure injected: ${response.data.result.message}`);
-    } catch (error) {
+      setSuccess(response.data.result.message || 'Failure injected successfully');
+    } catch (error: any) {
       console.error('Error injecting failure:', error);
-      alert('Failed to inject failure');
+      setError(error.response?.data?.error || 'Failed to inject failure');
     }
   };
 
@@ -97,6 +102,18 @@ export default function ControlPanel() {
             Automatically adjusts load balancer configuration to maintain 95% balance accuracy
           </p>
         </div>
+        
+        {error && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-sm text-red-800">{error}</p>
+          </div>
+        )}
+        
+        {success && (
+          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
+            <p className="text-sm text-green-800">{success}</p>
+          </div>
+        )}
       </div>
     </div>
   );

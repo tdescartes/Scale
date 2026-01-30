@@ -4,6 +4,7 @@ Injects various failure scenarios for chaos engineering
 """
 
 import asyncio
+import time
 from typing import Dict, Any
 import random
 import logging
@@ -36,7 +37,7 @@ class FailureInjector:
         duration = config.get("duration", 60)
         severity = config.get("severity", "medium")
         
-        failure_id = f"{failure_type}_{target}_{asyncio.get_event_loop().time()}"
+        failure_id = f"{failure_type}_{target}_{time.time()}"
         
         # Store active failure
         self.active_failures[failure_id] = {
@@ -44,7 +45,7 @@ class FailureInjector:
             "target": target,
             "duration": duration,
             "severity": severity,
-            "start_time": asyncio.get_event_loop().time()
+            "start_time": time.time()
         }
         
         logger.info(f"Injecting {failure_type} failure on {target} for {duration}s")

@@ -5,6 +5,7 @@ import LoadTestPanel from '../components/LoadTestPanel';
 import MetricsDisplay from '../components/MetricsDisplay';
 import ResultsTable from '../components/ResultsTable';
 import ControlPanel from '../components/ControlPanel';
+import { API_CONFIG } from '../lib/config';
 
 export default function Home() {
   const [isConnected, setIsConnected] = useState(false);
@@ -14,33 +15,41 @@ export default function Home() {
 
   useEffect(() => {
     // Connect to WebSocket for real-time metrics
-    const ws = new WebSocket('ws://localhost:8000/ws/metrics');
-    
-    ws.onopen = () => {
-      console.log('WebSocket connected');
-      setIsConnected(true);
-    };
-    
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
+    const connectWebSocket = () => {
+      const ws = new WebSocket(`${API_CONFIG.wsUrl}/ws/metrics`);
       
-      if (data.type === 'metrics_update') {
-        setMetrics(data.data);
-      } else if (data.type === 'imbalance_alert') {
-        // Show alert notification
-        console.warn('Imbalance detected:', data.data);
-      }
+      ws.onopen = () => {
+        console.log('WebSocket connected');
+        setIsConnected(true);
+      };
+      
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        
+        if (data.type === 'metrics_update') {
+          setMetrics(data.data);
+        } else if (data.type === 'imbalance_alert') {
+          // Show alert notification
+          console.warn('Imbalance detected:', data.data);
+        }
+      };
+      
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setIsConnected(false);
+      };
+      
+      ws.onclose = () => {
+        console.log('WebSocket disconnected');
+        setIsConnected(false);
+        // Reconnect after 5 seconds
+        setTimeout(connectWebSocket, 5000);
+      };
+      
+      return ws;
     };
     
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      setIsConnected(false);
-    };
-    
-    ws.onclose = () => {
-      console.log('WebSocket disconnected');
-      setIsConnected(false);
-    };
+    const ws = connectWebSocket();
     
     return () => {
       ws.close();

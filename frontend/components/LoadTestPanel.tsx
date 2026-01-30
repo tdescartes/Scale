@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import axios from 'axios';
+import { API_CONFIG } from '../lib/config';
 
 interface LoadTestPanelProps {
   onTestStart: (testId: string) => void;
@@ -15,11 +16,13 @@ export default function LoadTestPanel({ onTestStart, activeTest }: LoadTestPanel
   const [targetUrl, setTargetUrl] = useState('http://localhost:8080');
   const [scenario, setScenario] = useState('high_traffic');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleStartTest = async () => {
     setIsLoading(true);
+    setError(null);
     try {
-      const response = await axios.post('http://localhost:8000/api/load-test/start', {
+      const response = await axios.post(`${API_CONFIG.apiUrl}/api/load-test/start`, {
         target_url: targetUrl,
         users,
         duration,
@@ -27,10 +30,9 @@ export default function LoadTestPanel({ onTestStart, activeTest }: LoadTestPanel
       });
       
       onTestStart(response.data.test_id);
-      alert(`Test started with ID: ${response.data.test_id}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error starting test:', error);
-      alert('Failed to start test');
+      setError(error.response?.data?.error || 'Failed to start test');
     } finally {
       setIsLoading(false);
     }
@@ -40,16 +42,16 @@ export default function LoadTestPanel({ onTestStart, activeTest }: LoadTestPanel
     if (!activeTest) return;
     
     try {
-      await axios.post(`http://localhost:8000/api/load-test/stop/${activeTest}`);
-      alert('Test stopped');
+      await axios.post(`${API_CONFIG.apiUrl}/api/load-test/stop/${activeTest}`);
     } catch (error) {
       console.error('Error stopping test:', error);
+      setError('Failed to stop test');
     }
   };
 
   const handleGenerateScenario = async () => {
     try {
-      const response = await axios.post('http://localhost:8000/api/scenario/generate', {
+      const response = await axios.post(`${API_CONFIG.apiUrl}/api/scenario/generate`, {
         type: scenario,
         duration,
       });
@@ -58,10 +60,9 @@ export default function LoadTestPanel({ onTestStart, activeTest }: LoadTestPanel
       setUsers(config.users);
       setSpawnRate(config.spawn_rate);
       setDuration(config.duration);
-      
-      alert(`Scenario generated: ${response.data.scenario.name}`);
     } catch (error) {
       console.error('Error generating scenario:', error);
+      setError('Failed to generate scenario');
     }
   };
 
@@ -184,6 +185,12 @@ export default function LoadTestPanel({ onTestStart, activeTest }: LoadTestPanel
             <p className="text-sm text-blue-800">
               Test running: <span className="font-mono">{activeTest}</span>
             </p>
+          </div>
+        )}
+        
+        {error && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-sm text-red-800">{error}</p>
           </div>
         )}
       </div>
