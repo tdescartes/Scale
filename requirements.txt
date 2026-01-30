@@ -5,7 +5,7 @@ locust==2.20.0
 kubernetes==29.0.0
 
 # Web framework for API
-fastapi==0.109.0
+fastapi==0.109.2
 uvicorn[standard]==0.27.0
 websockets==12.0
 
