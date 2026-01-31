@@ -6,6 +6,8 @@ import MetricsDisplay from '../components/MetricsDisplay';
 import ResultsTable from '../components/ResultsTable';
 import ControlPanel from '../components/ControlPanel';
 import HistoricalChart from '../components/HistoricalChart';
+import InfoCards from '../components/InfoCards';
+import ScenarioExplainer from '../components/ScenarioExplainer';
 import { API_CONFIG } from '../lib/config';
 
 export default function Home() {
@@ -13,6 +15,21 @@ export default function Home() {
   const [metrics, setMetrics] = useState<any>(null);
   const [testResults, setTestResults] = useState<any[]>([]);
   const [activeTest, setActiveTest] = useState<string | null>(null);
+  
+  // Configuration states for scenario explainer
+  const [testConfig, setTestConfig] = useState({
+    users: 100,
+    duration: 60,
+    spawnRate: 10,
+    scenario: 'high_traffic',
+  });
+  
+  const [controlConfig, setControlConfig] = useState({
+    algorithm: 'round_robin',
+    failureType: 'none',
+    failureSeverity: 'medium',
+    failureDuration: 60,
+  });
 
   useEffect(() => {
     // Connect to WebSocket for real-time metrics
@@ -66,6 +83,23 @@ export default function Home() {
     setActiveTest(null);
   };
 
+  const handleAlgorithmChange = (algorithm: string) => {
+    setControlConfig({ ...controlConfig, algorithm });
+  };
+
+  const handleFailureInjection = (config: any) => {
+    setControlConfig({
+      ...controlConfig,
+      failureType: config.type,
+      failureSeverity: config.severity,
+      failureDuration: config.duration,
+    });
+  };
+
+  const handleTestConfigChange = (config: any) => {
+    setTestConfig(config);
+  };
+
   return (
     <main className="min-h-screen flex justify-center">
       <div className="w-full max-w-7xl px-6 py-8">
@@ -96,15 +130,24 @@ export default function Home() {
           </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="lg:col-span-2">
+        <div className="mb-6">
+          <ScenarioExplainer testConfig={testConfig} controlConfig={controlConfig} />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+          <div className="lg:col-span-3 space-y-6">
             <LoadTestPanel
               onTestStart={handleTestStart}
               activeTest={activeTest}
+              onConfigChange={handleTestConfigChange}
+            />
+            <ControlPanel 
+              onAlgorithmChange={handleAlgorithmChange}
+              onFailureInjection={handleFailureInjection}
             />
           </div>
           <div>
-            <ControlPanel />
+            <InfoCards />
           </div>
         </div>
 
