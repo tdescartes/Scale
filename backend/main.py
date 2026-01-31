@@ -168,6 +168,69 @@ async def generate_scenario(params: Dict[str, Any]):
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
+@app.post("/api/scenario/explain")
+async def explain_scenario(config: Dict[str, Any]):
+    """Generate AI explanation for the current scenario configuration"""
+    try:
+        test_config = config.get("test_config", {})
+        control_config = config.get("control_config", {})
+        
+        # Generate comprehensive explanation
+        users = test_config.get("users", 100)
+        duration = test_config.get("duration", 60)
+        spawn_rate = test_config.get("spawnRate", 10)
+        scenario = test_config.get("scenario", "high_traffic")
+        algorithm = control_config.get("algorithm", "round_robin")
+        failure_type = control_config.get("failureType", "none")
+        failure_severity = control_config.get("failureSeverity", "medium")
+        failure_duration = control_config.get("failureDuration", 60)
+        
+        explanation = f"""
+🎯 **Test Scenario Analysis:**
+
+Your configuration will execute a **{scenario.replace('_', ' ').title()}** test with {users} concurrent users over {duration} seconds.
+
+📊 **Load Pattern:**
+- Users will spawn at a rate of {spawn_rate} users/second
+- Ramp-up time: ~{int(users/spawn_rate)} seconds
+- Steady-state duration: ~{duration - int(users/spawn_rate)} seconds
+- Peak concurrent load: {users} users
+
+⚖️ **Load Balancing Strategy:**
+Using **{algorithm.replace('_', ' ').title()}** algorithm which {'distributes requests sequentially across pods ensuring fair distribution' if algorithm == 'round_robin' else 'routes to pods with fewest active connections for optimal resource usage' if algorithm == 'least_connections' else 'ensures session persistence by routing based on client IP' if algorithm == 'ip_hash' else 'assigns more traffic to higher-capacity pods' if algorithm == 'weighted_round_robin' else 'directs traffic to the fastest-responding pod'}.
+
+⚠️ **Failure Injection:**
+{'No failure injection configured - testing normal operating conditions.' if failure_type == 'none' else f'**{failure_type.replace("_", " ").title()}** failure with **{failure_severity}** severity for {failure_duration} seconds will test your system\'s resilience and recovery mechanisms.'}
+
+🔄 **Auto-Scaling Behavior:**
+Pods will dynamically scale between 2-10 based on load (scale up at 1200 req/pod, scale down at 800 req/pod).
+
+💡 **Expected Outcomes:**
+This test will help you understand request distribution patterns, identify performance bottlenecks, verify failover mechanisms, and validate auto-scaling behavior under {'normal' if failure_type == 'none' else 'stressed'} conditions.
+        """.strip()
+        
+        return {"explanation": explanation}
+    except Exception as e:
+        logger.error(f"Error explaining scenario: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.post("/api/algorithm/change")
+async def change_algorithm(config: Dict[str, Any]):
+    """Change the load balancing algorithm"""
+    try:
+        algorithm = config.get("algorithm", "round_robin")
+        result = k8s_monitor.set_algorithm(algorithm)
+        
+        if result["success"]:
+            return result
+        else:
+            return JSONResponse(status_code=400, content=result)
+    except Exception as e:
+        logger.error(f"Error changing algorithm: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
 @app.post("/api/failure/inject")
 async def inject_failure(config: Dict[str, Any]):
     """Inject a failure scenario"""
@@ -187,8 +250,13 @@ async def inject_failure(config: Dict[str, Any]):
         if duration <= 0 or duration > 3600:
             return JSONResponse(status_code=400, content={"error": "Duration must be between 1 and 3600 seconds"})
         
-        result = await failure_injector.inject(config)
-        return {"result": result}
+        # Inject failure in k8s_monitor
+        result = k8s_monitor.inject_failure(config)
+        
+        # Also inject in failure_injector for simulation
+        injector_result = await failure_injector.inject(config)
+        
+        return {"result": result, "injector": injector_result}
     except Exception as e:
         logger.error(f"Error injecting failure: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
