@@ -16,6 +16,15 @@ class K8sMonitor:
     
     def __init__(self):
         self.mock_mode = True  # Use mock data for development
+        self.current_pod_count = 3  # Start with 3 pods
+        self.min_pods = 2
+        self.max_pods = 10
+        self.scale_up_threshold = 1200  # Average requests per pod to scale up
+        self.scale_down_threshold = 800  # Average requests per pod to scale down
+        self.historical_metrics: List[Dict[str, Any]] = []  # Store historical data
+        self.max_history_size = 100  # Keep last 100 snapshots
+        self.last_scale_time = time.time()
+        self.scale_cooldown = 30  # Wait 30 seconds between scaling operations
         
     async def get_metrics(self) -> Dict[str, Any]:
         """
@@ -38,20 +47,22 @@ class K8sMonitor:
             return {}
     
     def _get_mock_metrics(self) -> Dict[str, Any]:
-        """Generate mock metrics for development"""
+        """Generate mock metrics for development with dynamic pod scaling"""
         import random
         
-        # Simulate metrics for 3 backend pods
+        # Simulate metrics for dynamically scaled backend pods
         pods = []
         total_requests = 0
         total_errors_4xx = 0
         total_errors_5xx = 0
         
-        for i in range(3):
+        # Simulate varying load - this would come from actual traffic in production
+        base_requests_per_pod = random.randint(800, 1400)
+        
+        for i in range(self.current_pod_count):
             # Simulate slight imbalance
-            base_requests = 1000
-            variance = random.randint(-100, 150) if i == 2 else random.randint(-50, 50)
-            requests = base_requests + variance
+            variance = random.randint(-100, 150) if i == self.current_pod_count - 1 else random.randint(-50, 50)
+            requests = base_requests_per_pod + variance
             
             # Health check simulation
             health_check_failures = random.randint(0, 2)
@@ -88,7 +99,24 @@ class K8sMonitor:
                 "throughput_rps": requests / 60,  # requests per second
             })
         
-        return {
+        # Auto-scaling logic based on average load per pod
+        current_time = time.time()
+        if current_time - self.last_scale_time >= self.scale_cooldown:
+            avg_requests_per_pod = total_requests / self.current_pod_count if self.current_pod_count > 0 else 0
+            
+            # Scale up if average load is high and we're not at max
+            if avg_requests_per_pod > self.scale_up_threshold and self.current_pod_count < self.max_pods:
+                self.current_pod_count += 1
+                self.last_scale_time = current_time
+                logger.info(f"Scaling UP: {self.current_pod_count - 1} -> {self.current_pod_count} pods (avg load: {avg_requests_per_pod:.1f})")
+            
+            # Scale down if average load is low and we're not at min
+            elif avg_requests_per_pod < self.scale_down_threshold and self.current_pod_count > self.min_pods:
+                self.current_pod_count -= 1
+                self.last_scale_time = current_time
+                logger.info(f"Scaling DOWN: {self.current_pod_count + 1} -> {self.current_pod_count} pods (avg load: {avg_requests_per_pod:.1f})")
+        
+        metrics_snapshot = {
             "pods": pods,
             "total_requests": total_requests,
             "total_errors_4xx": total_errors_4xx,
@@ -96,17 +124,78 @@ class K8sMonitor:
             "timestamp": time.time(),
             "algorithm": "round_robin",  # Can be changed to simulate different algorithms
             "health_check_interval": 5,
+            "pod_count": self.current_pod_count,
+            "scaling_status": {
+                "current_pods": self.current_pod_count,
+                "min_pods": self.min_pods,
+                "max_pods": self.max_pods,
+                "avg_load_per_pod": total_requests / self.current_pod_count if self.current_pod_count > 0 else 0,
+            }
         }
+        
+        # Store historical snapshot
+        self._store_historical_snapshot(metrics_snapshot)
+        
+        return metrics_snapshot
+    
+    def _store_historical_snapshot(self, metrics: Dict[str, Any]):
+        """Store a snapshot of metrics for historical tracking"""
+        # Create a simplified snapshot for historical data
+        snapshot = {
+            "timestamp": metrics["timestamp"],
+            "pod_count": metrics["pod_count"],
+            "total_requests": metrics["total_requests"],
+            "pods": [
+                {
+                    "name": pod["name"],
+                    "requests": pod["requests"],
+                    "response_time_ms": pod["response_time_ms"],
+                    "error_rate": pod["error_rate"],
+                    "cpu_usage": pod["cpu_usage"],
+                    "memory_usage": pod["memory_usage"],
+                }
+                for pod in metrics["pods"]
+            ]
+        }
+        
+        self.historical_metrics.append(snapshot)
+        
+        # Keep only the last max_history_size snapshots
+        if len(self.historical_metrics) > self.max_history_size:
+            self.historical_metrics.pop(0)
+    
+    def get_historical_metrics(self, minutes: int = 5) -> List[Dict[str, Any]]:
+        """Get historical metrics for the last N minutes"""
+        if not self.historical_metrics:
+            return []
+        
+        current_time = time.time()
+        cutoff_time = current_time - (minutes * 60)
+        
+        # Filter metrics to only include those within the time window
+        filtered_metrics = [
+            m for m in self.historical_metrics
+            if m["timestamp"] >= cutoff_time
+        ]
+        
+        return filtered_metrics
     
     async def get_ingress_config(self) -> Dict[str, Any]:
         """Get NGINX Ingress Controller configuration"""
         return {
             "load_balancing_algorithm": "round_robin",
-            "backend_servers": 3,
+            "backend_servers": self.current_pod_count,
             "health_check_interval": 5,
             "health_check_timeout": 3,
             "max_fails": 3,
-            "fail_timeout": 30
+            "fail_timeout": 30,
+            "auto_scaling": {
+                "enabled": True,
+                "min_pods": self.min_pods,
+                "max_pods": self.max_pods,
+                "scale_up_threshold": self.scale_up_threshold,
+                "scale_down_threshold": self.scale_down_threshold,
+            }
         }
     
     def get_health_check_events(self) -> List[Dict[str, Any]]:
