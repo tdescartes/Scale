@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 * {
   box-sizing: border-box;
   padding: 0;
@@ -16,8 +20,8 @@ body {
     "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  background-attachment: fixed;
+  background: #f8f9fa;
+  color: #000000;
 }
 
 a {
@@ -28,7 +32,7 @@ a {
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -46,25 +50,10 @@ a {
   }
 }
 
-@keyframes slideIn {
-  from {
-    transform: translateX(-10px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
 .animate-fadeIn {
-  animation: fadeIn 0.5s ease-out;
+  animation: fadeIn 0.3s ease-out;
 }
 
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.animate-slideIn {
-  animation: slideIn 0.3s ease-out;
 }
