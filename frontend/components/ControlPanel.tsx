@@ -8,6 +8,7 @@ export default function ControlPanel() {
   const [failureType, setFailureType] = useState('latency');
   const [failureSeverity, setFailureSeverity] = useState('medium');
   const [failureDuration, setFailureDuration] = useState(60);
+  const [algorithm, setAlgorithm] = useState('round_robin');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -29,11 +30,55 @@ export default function ControlPanel() {
     }
   };
 
+  const handleChangeAlgorithm = async () => {
+    setError(null);
+    setSuccess(null);
+    try {
+      // In a real implementation, this would call an API to change the algorithm
+      setSuccess(`Load balancing algorithm changed to: ${algorithm}`);
+    } catch (error: any) {
+      console.error('Error changing algorithm:', error);
+      setError('Failed to change algorithm');
+    }
+  };
+
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6 h-full">
       <h2 className="text-xl font-semibold text-black mb-6">Control Panel</h2>
 
       <div className="space-y-6">
+        <div className="border border-gray-200 rounded p-4">
+          <h3 className="text-sm font-semibold text-black mb-4 uppercase tracking-wide">
+            Load Balancing Algorithm
+          </h3>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Algorithm
+              </label>
+              <select
+                value={algorithm}
+                onChange={(e) => setAlgorithm(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black focus:border-black bg-white text-sm"
+              >
+                <option value="round_robin">Round Robin</option>
+                <option value="least_connections">Least Connections</option>
+                <option value="ip_hash">IP Hash</option>
+                <option value="weighted_round_robin">Weighted Round Robin</option>
+                <option value="least_response_time">Least Response Time</option>
+              </select>
+            </div>
+
+            <button
+              onClick={handleChangeAlgorithm}
+              className="w-full bg-black text-white px-4 py-2.5 rounded hover:bg-gray-800 font-medium text-sm transition-colors"
+            >
+              Apply Algorithm
+            </button>
+          </div>
+        </div>
+
         <div className="border border-gray-200 rounded p-4">
           <h3 className="text-sm font-semibold text-black mb-4 uppercase tracking-wide">
             Failure Injection
