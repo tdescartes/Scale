@@ -19,11 +19,17 @@ export default function MetricsDisplay({ metrics }: MetricsDisplayProps) {
   const pods = metrics.metrics?.pods || [];
   const balanceScore = metrics.balance_score || 0;
   const isBalanced = balanceScore >= 0.95;
+  const algorithm = metrics.metrics?.algorithm || 'unknown';
+  const healthEvents = metrics.health_check_events || [];
+  const failoverEvents = metrics.failover_events || [];
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold text-black">Real-Time Metrics</h2>
+        <div>
+          <h2 className="text-xl font-semibold text-black">Real-Time Metrics</h2>
+          <p className="text-xs text-gray-500 mt-1">Algorithm: <span className="font-mono font-medium">{algorithm}</span></p>
+        </div>
         <div className="flex items-center gap-4">
           <div className="text-right">
             <p className="text-xs text-gray-600 mb-1">Balance Score</p>
@@ -42,8 +48,9 @@ export default function MetricsDisplay({ metrics }: MetricsDisplayProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {pods.map((pod: any, index: number) => {
-          const isHealthy = pod.error_rate <= 0.05 && pod.cpu_usage < 80 && pod.memory_usage < 80;
-          const statusColor = isHealthy ? 'green' : pod.error_rate > 0.1 ? 'red' : 'yellow';
+          const isHealthy = pod.health_status === 'healthy';
+          const errorRate = pod.error_rate || 0;
+          const statusColor = isHealthy ? (errorRate > 0.05 ? 'yellow' : 'green') : 'red';
 
           return (
             <div key={index} className="bg-white border-2 border-gray-200 rounded-lg p-6 hover:border-gray-300 transition-colors">
@@ -54,9 +61,12 @@ export default function MetricsDisplay({ metrics }: MetricsDisplayProps) {
                   </div>
                   <div>
                     <h3 className="font-semibold text-black text-sm">{pod.name}</h3>
-                    <span className={`inline-block w-2 h-2 rounded-full mt-1 ${statusColor === 'green' ? 'bg-green-500' :
-                        statusColor === 'red' ? 'bg-red-500' : 'bg-yellow-500'
-                      }`}></span>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`inline-block w-2 h-2 rounded-full ${statusColor === 'green' ? 'bg-green-500' :
+                          statusColor === 'red' ? 'bg-red-500' : 'bg-yellow-500'
+                        }`}></span>
+                      <span className="text-xs text-gray-500">{pod.health_status}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -67,39 +77,105 @@ export default function MetricsDisplay({ metrics }: MetricsDisplayProps) {
                     <span className="text-xs font-medium text-gray-500 uppercase">Requests</span>
                     <span className="text-lg font-bold text-black">{pod.requests}</span>
                   </div>
+                  <div className="flex justify-between items-center text-xs text-gray-600 mt-2">
+                    <span>Success: {pod.successful_requests || pod.requests}</span>
+                    <span className="text-red-600">4xx: {pod.errors_4xx || 0} | 5xx: {pod.errors_5xx || 0}</span>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="text-xs font-medium text-gray-500 uppercase mb-1">Response</div>
+                    <div className="text-xs font-medium text-gray-500 uppercase mb-1">Latency</div>
                     <div className="text-base font-semibold text-black">{pod.response_time_ms.toFixed(1)}ms</div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      P95: {(pod.response_time_p95 || pod.response_time_ms).toFixed(1)}ms
+                    </div>
                   </div>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="text-xs font-medium text-gray-500 uppercase mb-1">Throughput</div>
+                    <div className="text-base font-semibold text-black">{(pod.throughput_rps || 0).toFixed(1)}</div>
+                    <div className="text-xs text-gray-500 mt-1">req/sec</div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
                   <div className="bg-gray-50 rounded-lg p-3">
                     <div className="text-xs font-medium text-gray-500 uppercase mb-1">CPU</div>
                     <div className={`text-base font-semibold ${pod.cpu_usage > 80 ? 'text-red-600' :
                         pod.cpu_usage > 60 ? 'text-yellow-600' : 'text-green-600'
                       }`}>{pod.cpu_usage.toFixed(1)}%</div>
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
                   <div className="bg-gray-50 rounded-lg p-3">
                     <div className="text-xs font-medium text-gray-500 uppercase mb-1">Memory</div>
                     <div className={`text-base font-semibold ${pod.memory_usage > 80 ? 'text-red-600' :
                         pod.memory_usage > 60 ? 'text-yellow-600' : 'text-green-600'
                       }`}>{pod.memory_usage.toFixed(1)}%</div>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="text-xs font-medium text-gray-500 uppercase mb-1">Errors</div>
-                    <div className={`text-base font-semibold ${pod.error_rate > 0.05 ? 'text-red-600' : 'text-green-600'
-                      }`}>{(pod.error_rate * 100).toFixed(2)}%</div>
+                </div>
+
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-medium text-gray-500 uppercase">Error Rate</span>
+                    <span className={`text-base font-semibold ${errorRate > 0.05 ? 'text-red-600' : 'text-green-600'
+                      }`}>{(errorRate * 100).toFixed(2)}%</span>
                   </div>
+                  {pod.health_check_failures > 0 && (
+                    <div className="text-xs text-red-600 mt-1">
+                      Health check failures: {pod.health_check_failures}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           );
         })}
       </div>
+
+      {/* Health Check & Failover Events */}
+      {(healthEvents.length > 0 || failoverEvents.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {healthEvents.length > 0 && (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-black mb-3 uppercase tracking-wide">
+                Recent Health Checks
+              </h3>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {healthEvents.slice(0, 5).map((event: any, idx: number) => (
+                  <div key={idx} className="flex justify-between items-center text-xs bg-white p-2 rounded">
+                    <span className="font-mono text-gray-700">{event.pod}</span>
+                    <span className={`px-2 py-0.5 rounded font-medium ${event.status === 'passed' ? 'bg-green-100 text-green-700' :
+                        event.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                      }`}>
+                      {event.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {failoverEvents.length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-red-700 mb-3 uppercase tracking-wide">
+                Failover Events
+              </h3>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {failoverEvents.slice(0, 5).map((event: any, idx: number) => (
+                  <div key={idx} className="bg-white p-2 rounded border border-red-200">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-mono text-gray-700">{event.failed_pod}</span>
+                      <span className="text-red-600 font-medium">{event.reason}</span>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Redirected: {event.requests_redirected} requests
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="border-t-2 border-gray-200 pt-8">
         <h3 className="text-base font-semibold text-black mb-6">
