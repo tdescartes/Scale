@@ -4,41 +4,76 @@ import { useState } from 'react';
 import axios from 'axios';
 import { API_CONFIG } from '../lib/config';
 
-export default function ControlPanel() {
+interface ControlPanelProps {
+  onAlgorithmChange?: (algorithm: string) => void;
+  onFailureInjection?: (config: any) => void;
+}
+
+export default function ControlPanel({ onAlgorithmChange, onFailureInjection }: ControlPanelProps) {
   const [failureType, setFailureType] = useState('latency');
   const [failureSeverity, setFailureSeverity] = useState('medium');
   const [failureDuration, setFailureDuration] = useState(60);
   const [algorithm, setAlgorithm] = useState('round_robin');
+  const [autoTuning, setAutoTuning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleInjectFailure = async () => {
     setError(null);
     setSuccess(null);
+    setIsProcessing(true);
     try {
-      const response = await axios.post(`${API_CONFIG.apiUrl}/api/failure/inject`, {
+      const config = {
         type: failureType,
         severity: failureSeverity,
         duration: failureDuration,
         target: 'random',
-      });
+      };
+      
+      const response = await axios.post(`${API_CONFIG.apiUrl}/api/failure/inject`, config);
 
       setSuccess(response.data.result.message || 'Failure injected successfully');
+      
+      if (onFailureInjection) {
+        onFailureInjection(config);
+      }
     } catch (error: any) {
       console.error('Error injecting failure:', error);
       setError(error.response?.data?.error || 'Failed to inject failure');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const handleChangeAlgorithm = async () => {
     setError(null);
     setSuccess(null);
+    setIsProcessing(true);
     try {
-      // In a real implementation, this would call an API to change the algorithm
-      setSuccess(`Load balancing algorithm changed to: ${algorithm}`);
+      const response = await axios.post(`${API_CONFIG.apiUrl}/api/algorithm/change`, {
+        algorithm: algorithm,
+      });
+
+      setSuccess(response.data.message || `Algorithm changed to ${algorithm}`);
+      
+      if (onAlgorithmChange) {
+        onAlgorithmChange(algorithm);
+      }
     } catch (error: any) {
       console.error('Error changing algorithm:', error);
-      setError('Failed to change algorithm');
+      setError(error.response?.data?.error || 'Failed to change algorithm');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleToggleAutoTuning = () => {
+    setAutoTuning(!autoTuning);
+    if (!autoTuning) {
+      setSuccess('Auto-tuning enabled - system will optimize load balancing automatically');
+    } else {
+      setSuccess('Auto-tuning disabled');
     }
   };
 
@@ -72,9 +107,10 @@ export default function ControlPanel() {
 
             <button
               onClick={handleChangeAlgorithm}
-              className="w-full bg-black text-white px-4 py-2.5 rounded hover:bg-gray-800 font-medium text-sm transition-colors"
+              disabled={isProcessing}
+              className="w-full bg-black text-white px-4 py-2.5 rounded hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium text-sm transition-colors"
             >
-              Apply Algorithm
+              {isProcessing ? 'Applying...' : 'Apply Algorithm'}
             </button>
           </div>
         </div>
@@ -92,7 +128,8 @@ export default function ControlPanel() {
               <select
                 value={failureType}
                 onChange={(e) => setFailureType(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black focus:border-black bg-white text-sm"
+                disabled={isProcessing}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black focus:border-black bg-white text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
                 <option value="latency">Latency</option>
                 <option value="error">Error Injection</option>
@@ -108,7 +145,8 @@ export default function ControlPanel() {
               <select
                 value={failureSeverity}
                 onChange={(e) => setFailureSeverity(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black focus:border-black bg-white text-sm"
+                disabled={isProcessing}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black focus:border-black bg-white text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -127,7 +165,8 @@ export default function ControlPanel() {
                 step="10"
                 value={failureDuration}
                 onChange={(e) => setFailureDuration(Number(e.target.value))}
-                className="w-full h-1 bg-gray-200 rounded appearance-none cursor-pointer accent-black"
+                disabled={isProcessing}
+                className="w-full h-1 bg-gray-200 rounded appearance-none cursor-pointer accent-black disabled:cursor-not-allowed"
               />
               <div className="flex justify-between text-xs text-gray-500 mt-1">
                 <span>10s</span>
@@ -137,23 +176,34 @@ export default function ControlPanel() {
 
             <button
               onClick={handleInjectFailure}
-              className="w-full bg-black text-white px-4 py-2.5 rounded hover:bg-gray-800 font-medium text-sm transition-colors"
+              disabled={isProcessing}
+              className="w-full bg-red-600 text-white px-4 py-2.5 rounded hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium text-sm transition-colors"
             >
-              Inject Failure
+              {isProcessing ? 'Injecting...' : 'Inject Failure'}
             </button>
           </div>
         </div>
 
         <div className="border-t border-gray-200 pt-6">
           <div className="border border-gray-200 rounded p-4">
-            <h3 className="text-sm font-semibold text-black mb-3 uppercase tracking-wide">
-              Auto-Tuning
-            </h3>
-            <button className="w-full bg-white border border-gray-300 text-black px-4 py-2.5 rounded hover:bg-gray-50 font-medium text-sm transition-colors">
-              Enable Auto-Tuning
-            </button>
-            <p className="text-xs text-gray-600 mt-3">
-              Automatically adjusts load balancer configuration to maintain 95% balance accuracy
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-black uppercase tracking-wide">
+                Auto-Tuning
+              </h3>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={autoTuning}
+                  onChange={handleToggleAutoTuning}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-black rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+              </label>
+            </div>
+            <p className="text-xs text-gray-600">
+              {autoTuning 
+                ? '✓ System is automatically optimizing load distribution and scaling'
+                : 'Enable to automatically adjust load balancer configuration for optimal performance'}
             </p>
           </div>
         </div>
