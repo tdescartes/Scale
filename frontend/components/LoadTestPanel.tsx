@@ -1,15 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_CONFIG } from '../lib/config';
 
 interface LoadTestPanelProps {
   onTestStart: (testId: string) => void;
   activeTest: string | null;
+  onConfigChange?: (config: any) => void;
 }
 
-export default function LoadTestPanel({ onTestStart, activeTest }: LoadTestPanelProps) {
+export default function LoadTestPanel({ onTestStart, activeTest, onConfigChange }: LoadTestPanelProps) {
   const [users, setUsers] = useState(100);
   const [duration, setDuration] = useState(60);
   const [spawnRate, setSpawnRate] = useState(10);
@@ -17,6 +18,13 @@ export default function LoadTestPanel({ onTestStart, activeTest }: LoadTestPanel
   const [scenario, setScenario] = useState('high_traffic');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Notify parent of config changes
+  useEffect(() => {
+    if (onConfigChange) {
+      onConfigChange({ users, duration, spawnRate, scenario });
+    }
+  }, [users, duration, spawnRate, scenario]);
 
   const handleStartTest = async () => {
     setIsLoading(true);
