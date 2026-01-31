@@ -17,15 +17,15 @@ export default function Home() {
     // Connect to WebSocket for real-time metrics
     const connectWebSocket = () => {
       const ws = new WebSocket(`${API_CONFIG.wsUrl}/ws/metrics`);
-      
+
       ws.onopen = () => {
         console.log('WebSocket connected');
         setIsConnected(true);
       };
-      
+
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        
+
         if (data.type === 'metrics_update') {
           setMetrics(data.data);
         } else if (data.type === 'imbalance_alert') {
@@ -33,24 +33,24 @@ export default function Home() {
           console.warn('Imbalance detected:', data.data);
         }
       };
-      
+
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
         setIsConnected(false);
       };
-      
+
       ws.onclose = () => {
         console.log('WebSocket disconnected');
         setIsConnected(false);
         // Reconnect after 5 seconds
         setTimeout(connectWebSocket, 5000);
       };
-      
+
       return ws;
     };
-    
+
     const ws = connectWebSocket();
-    
+
     return () => {
       ws.close();
     };
@@ -66,41 +66,48 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <main className="min-h-screen">
       <div className="container mx-auto px-4 py-8">
-        <header className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Load Balancer Simulator & Tester
-          </h1>
-          <p className="text-gray-600">
-            Kubernetes NGINX Ingress Load Testing & Optimization Platform
-          </p>
-          <div className="mt-2">
-            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-              isConnected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-            }`}>
-              {isConnected ? '● Connected' : '● Disconnected'}
-            </span>
+        <header className="mb-8 animate-fadeIn">
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-5xl font-bold text-white mb-3 tracking-tight">
+                  ⚡ Load Balancer Simulator
+                </h1>
+                <p className="text-white/90 text-lg">
+                  Kubernetes NGINX Ingress Load Testing & Optimization Platform
+                </p>
+              </div>
+              <div className="text-right">
+                <span className={`inline-flex items-center px-5 py-2 rounded-full text-sm font-semibold shadow-lg transition-all duration-300 ${isConnected
+                    ? 'bg-green-500 text-white animate-pulse'
+                    : 'bg-red-500 text-white'
+                  }`}>
+                  {isConnected ? '● Live' : '● Offline'}
+                </span>
+              </div>
+            </div>
           </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="lg:col-span-2">
-            <LoadTestPanel 
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 animate-fadeIn">
+          <div className="lg:col-span-2 transform transition-all duration-300 hover:scale-[1.01]">
+            <LoadTestPanel
               onTestStart={handleTestStart}
               activeTest={activeTest}
             />
           </div>
-          <div>
+          <div className="transform transition-all duration-300 hover:scale-[1.01]">
             <ControlPanel />
           </div>
         </div>
 
-        <div className="mb-8">
+        <div className="mb-8 animate-fadeIn transform transition-all duration-300 hover:scale-[1.01]">
           <MetricsDisplay metrics={metrics} />
         </div>
 
-        <div>
+        <div className="animate-fadeIn transform transition-all duration-300 hover:scale-[1.01]">
           <ResultsTable results={testResults} />
         </div>
       </div>
