@@ -116,92 +116,87 @@ export default function LoadTestPanel({ onTestStart, activeTest }: LoadTestPanel
           </button>
         </div>
 
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-5 rounded-xl border border-blue-200">
-          <label className="block text-sm font-semibold text-gray-700 mb-3">
-            👥 Concurrent Users: <span className="text-blue-600 text-lg">{users}</span>
-          </label>
-          <input
-            type="range"
-            min="10"
-            max="1000"
-            step="10"
-            value={users}
-            onChange={(e) => setUsers(Number(e.target.value))}
-            className="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-          />
-          <div className="flex justify-between text-xs text-gray-500 mt-1">
-            <span>10</span>
-            <span>1000</span>
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Users: {users}
+            </label>
+            <input
+              type="range"
+              min="10"
+              max="1000"
+              step="10"
+              value={users}
+              onChange={(e) => setUsers(Number(e.target.value))}
+              className="w-full h-1 bg-gray-200 rounded appearance-none cursor-pointer accent-black"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>10</span>
+              <span>1000</span>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Spawn Rate: {spawnRate}/s
+            </label>
+            <input
+              type="range"
+              min="1"
+              max="100"
+              step="1"
+              value={spawnRate}
+              onChange={(e) => setSpawnRate(Number(e.target.value))}
+              className="w-full h-1 bg-gray-200 rounded appearance-none cursor-pointer accent-black"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>1</span>
+              <span>100</span>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Duration: {duration}s
+            </label>
+            <input
+              type="range"
+              min="10"
+              max="600"
+              step="10"
+              value={duration}
+              onChange={(e) => setDuration(Number(e.target.value))}
+              className="w-full h-1 bg-gray-200 rounded appearance-none cursor-pointer accent-black"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>10s</span>
+              <span>600s</span>
+            </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-5 rounded-xl border border-purple-200">
-          <label className="block text-sm font-semibold text-gray-700 mb-3">
-            ⚡ Spawn Rate (users/sec): <span className="text-purple-600 text-lg">{spawnRate}</span>
-          </label>
-          <input
-            type="range"
-            min="1"
-            max="100"
-            step="1"
-            value={spawnRate}
-            onChange={(e) => setSpawnRate(Number(e.target.value))}
-            className="w-full h-2 bg-purple-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
-          />
-          <div className="flex justify-between text-xs text-gray-500 mt-1">
-            <span>1</span>
-            <span>100</span>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-green-50 to-teal-50 p-5 rounded-xl border border-green-200">
-          <label className="block text-sm font-semibold text-gray-700 mb-3">
-            ⏱️ Duration (seconds): <span className="text-green-600 text-lg">{duration}</span>
-          </label>
-          <input
-            type="range"
-            min="10"
-            max="600"
-            step="10"
-            value={duration}
-            onChange={(e) => setDuration(Number(e.target.value))}
-            className="w-full h-2 bg-green-200 rounded-lg appearance-none cursor-pointer accent-green-600"
-          />
-          <div className="flex justify-between text-xs text-gray-500 mt-1">
-            <span>10s</span>
-            <span>600s</span>
-          </div>
-        </div>
-
-        <div className="flex gap-4 pt-4">
+        <div className="flex gap-3 pt-4 border-t border-gray-200">
           <button
             onClick={handleStartTest}
             disabled={activeTest !== null || isLoading}
-            className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed font-semibold text-lg shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+            className="flex-1 bg-blue-600 text-white px-4 py-2.5 rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium text-sm transition-colors"
           >
-            {isLoading ? '⏳ Starting...' : '▶️ Start Test'}
+            {isLoading ? 'Starting...' : 'Start Test'}
           </button>
           <button
             onClick={handleStopTest}
             disabled={activeTest === null}
-            className="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-4 rounded-xl hover:from-red-700 hover:to-red-800 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed font-semibold text-lg shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+            className="flex-1 bg-white border border-gray-300 text-black px-4 py-2.5 rounded hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed font-medium text-sm transition-colors"
           >
-            ⏹️ Stop Test
+            Stop Test
           </button>
         </div>
 
         {activeTest && (
-          <div className="mt-4 p-4 bg-gradient-to-r from-blue-500 to-blue-600 border-2 border-blue-400 rounded-xl animate-pulse shadow-lg">
-            <p className="text-sm text-white font-medium flex items-center gap-2">
-              <span className="text-lg">🏃</span>
-              Test running: <span className="font-mono bg-white/20 px-2 py-1 rounded">{activeTest.substring(0, 12)}...</span>
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded">
+            <p className="text-sm text-blue-700">
+              Test ID: <span className="font-mono">{activeTest.substring(0, 12)}...</span>
             </p>
-          </div>
-        )}
-
-        {error && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-800">{error}</p>
           </div>
         )}
       </div>
