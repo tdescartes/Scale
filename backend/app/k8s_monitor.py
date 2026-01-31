@@ -25,6 +25,8 @@ class K8sMonitor:
         self.max_history_size = 100  # Keep last 100 snapshots
         self.last_scale_time = time.time()
         self.scale_cooldown = 30  # Wait 30 seconds between scaling operations
+        self.current_algorithm = "round_robin"  # Current load balancing algorithm
+        self.failure_injection = None  # Current failure injection config
         
     async def get_metrics(self) -> Dict[str, Any]:
         """
@@ -122,7 +124,7 @@ class K8sMonitor:
             "total_errors_4xx": total_errors_4xx,
             "total_errors_5xx": total_errors_5xx,
             "timestamp": time.time(),
-            "algorithm": "round_robin",  # Can be changed to simulate different algorithms
+            "algorithm": self.current_algorithm,
             "health_check_interval": 5,
             "pod_count": self.current_pod_count,
             "scaling_status": {
@@ -130,8 +132,12 @@ class K8sMonitor:
                 "min_pods": self.min_pods,
                 "max_pods": self.max_pods,
                 "avg_load_per_pod": total_requests / self.current_pod_count if self.current_pod_count > 0 else 0,
-            }
+            },
+            "failure_injection": self.failure_injection
         }
+        
+        # Clear failure injection if duration expired
+        self.clear_failure_injection()
         
         # Store historical snapshot
         self._store_historical_snapshot(metrics_snapshot)
@@ -230,3 +236,49 @@ class K8sMonitor:
                 })
         
         return sorted(events, key=lambda x: x["timestamp"], reverse=True)
+    
+    def set_algorithm(self, algorithm: str) -> Dict[str, Any]:
+        """Change the load balancing algorithm"""
+        valid_algorithms = ["round_robin", "least_connections", "ip_hash", "weighted_round_robin", "least_response_time"]
+        
+        if algorithm not in valid_algorithms:
+            return {
+                "success": False,
+                "message": f"Invalid algorithm. Must be one of: {', '.join(valid_algorithms)}"
+            }
+        
+        self.current_algorithm = algorithm
+        logger.info(f"Load balancing algorithm changed to: {algorithm}")
+        
+        return {
+            "success": True,
+            "message": f"Load balancing algorithm changed to {algorithm}",
+            "algorithm": algorithm
+        }
+    
+    def inject_failure(self, config: Dict[str, Any]) -> Dict[str, Any]:
+        """Store failure injection configuration"""
+        self.failure_injection = {
+            "type": config.get("type"),
+            "severity": config.get("severity"),
+            "duration": config.get("duration"),
+            "start_time": time.time(),
+        }
+        
+        logger.info(f"Failure injection activated: {self.failure_injection}")
+        
+        return {
+            "success": True,
+            "message": f"{config.get('type')} failure injected with {config.get('severity')} severity for {config.get('duration')}s",
+            "config": self.failure_injection
+        }
+    
+    def clear_failure_injection(self):
+        """Clear active failure injection"""
+        if self.failure_injection:
+            elapsed = time.time() - self.failure_injection["start_time"]
+            if elapsed >= self.failure_injection["duration"]:
+                logger.info("Failure injection completed")
+                self.failure_injection = None
+                return True
+        return False
