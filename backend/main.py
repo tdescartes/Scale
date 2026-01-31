@@ -125,10 +125,15 @@ async def get_metrics():
     try:
         metrics = await k8s_monitor.get_metrics()
         balance_score = balance_analyzer.calculate_balance_score(metrics)
+        health_events = k8s_monitor.get_health_check_events()
+        failover_events = k8s_monitor.get_failover_events()
+        
         return {
             "metrics": metrics,
             "balance_score": balance_score,
-            "is_balanced": balance_score >= 0.95
+            "is_balanced": balance_score >= 0.95,
+            "health_check_events": health_events,
+            "failover_events": failover_events,
         }
     except Exception as e:
         logger.error(f"Error getting metrics: {e}")
