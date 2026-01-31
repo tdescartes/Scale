@@ -66,48 +66,52 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen">
-      <div className="container mx-auto px-4 py-8">
+    <main className="min-h-screen flex justify-center">
+      <div className="w-full max-w-7xl px-6 py-8">
         <header className="mb-8 animate-fadeIn">
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
-            <div className="flex items-center justify-between">
+          <div className="bg-white border-2 border-gray-200 rounded-lg p-8">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
-                <h1 className="text-5xl font-bold text-white mb-3 tracking-tight">
-                  ⚡ Load Balancer Simulator
+                <h1 className="text-4xl font-bold text-black mb-2">
+                  Load Balancer Simulator
                 </h1>
-                <p className="text-white/90 text-lg">
+                <p className="text-gray-600">
                   Kubernetes NGINX Ingress Load Testing & Optimization Platform
                 </p>
               </div>
-              <div className="text-right">
-                <span className={`inline-flex items-center px-5 py-2 rounded-full text-sm font-semibold shadow-lg transition-all duration-300 ${isConnected
-                    ? 'bg-green-500 text-white animate-pulse'
-                    : 'bg-red-500 text-white'
-                  }`}>
-                  {isConnected ? '● Live' : '● Offline'}
-                </span>
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Status</div>
+                  <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold ${isConnected
+                    ? 'bg-green-50 text-green-700 border-2 border-green-200'
+                    : 'bg-red-50 text-red-700 border-2 border-red-200'
+                    }`}>
+                    <span className={`w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'} animate-pulse`}></span>
+                    {isConnected ? 'Connected' : 'Disconnected'}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 animate-fadeIn">
-          <div className="lg:col-span-2 transform transition-all duration-300 hover:scale-[1.01]">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="lg:col-span-2">
             <LoadTestPanel
               onTestStart={handleTestStart}
               activeTest={activeTest}
             />
           </div>
-          <div className="transform transition-all duration-300 hover:scale-[1.01]">
+          <div>
             <ControlPanel />
           </div>
         </div>
 
-        <div className="mb-8 animate-fadeIn transform transition-all duration-300 hover:scale-[1.01]">
+        <div className="mb-6">
           <MetricsDisplay metrics={metrics} />
         </div>
 
-        <div className="animate-fadeIn transform transition-all duration-300 hover:scale-[1.01]">
+        <div>
           <ResultsTable results={testResults} />
         </div>
       </div>
