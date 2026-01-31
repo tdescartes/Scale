@@ -140,6 +140,23 @@ async def get_metrics():
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
+@app.get("/api/metrics/history")
+async def get_metrics_history(minutes: int = 5):
+    """Get historical metrics for the last N minutes"""
+    try:
+        if minutes <= 0 or minutes > 60:
+            return JSONResponse(status_code=400, content={"error": "Minutes must be between 1 and 60"})
+        
+        historical_data = k8s_monitor.get_historical_metrics(minutes)
+        return {
+            "historical_metrics": historical_data,
+            "time_window_minutes": minutes,
+        }
+    except Exception as e:
+        logger.error(f"Error getting historical metrics: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
 @app.post("/api/scenario/generate")
 async def generate_scenario(params: Dict[str, Any]):
     """Generate a load test scenario using LLM"""
