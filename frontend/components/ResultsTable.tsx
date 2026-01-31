@@ -21,7 +21,7 @@ export default function ResultsTable({ results }: ResultsTableProps) {
   }
 
   // Filter results
-  const filteredResults = results.filter(result => 
+  const filteredResults = results.filter(result =>
     filterStatus === 'all' || result.status === filterStatus
   );
 
@@ -46,7 +46,7 @@ export default function ResultsTable({ results }: ResultsTableProps) {
     <div className="bg-white border border-gray-200 rounded-lg p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold text-black">Test Results</h2>
-        
+
         <div className="flex gap-3">
           <select
             value={filterStatus}
@@ -109,7 +109,7 @@ export default function ResultsTable({ results }: ResultsTableProps) {
               const successRate = result.requests?.successful && result.requests?.total
                 ? (result.requests.successful / result.requests.total * 100).toFixed(1)
                 : 'N/A';
-              
+
               const isExpanded = expandedRow === index;
 
               return (
@@ -124,13 +124,12 @@ export default function ResultsTable({ results }: ResultsTableProps) {
                       </span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-medium rounded border ${
-                        result.status === 'completed'
+                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-medium rounded border ${result.status === 'completed'
                           ? 'bg-green-50 text-green-700 border-green-200'
                           : result.status === 'running'
-                          ? 'bg-blue-50 text-blue-700 border-blue-200'
-                          : 'bg-red-50 text-red-700 border-red-200'
-                      }`}>
+                            ? 'bg-blue-50 text-blue-700 border-blue-200'
+                            : 'bg-red-50 text-red-700 border-red-200'
+                        }`}>
                         {result.status}
                       </span>
                     </td>
@@ -138,10 +137,9 @@ export default function ResultsTable({ results }: ResultsTableProps) {
                       {result.requests?.total?.toLocaleString() || 'N/A'}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={`text-sm font-medium ${
-                        parseFloat(successRate) >= 99 ? 'text-green-600' : 
-                        parseFloat(successRate) >= 95 ? 'text-yellow-600' : 'text-red-600'
-                      }`}>
+                      <span className={`text-sm font-medium ${parseFloat(successRate) >= 99 ? 'text-green-600' :
+                          parseFloat(successRate) >= 95 ? 'text-yellow-600' : 'text-red-600'
+                        }`}>
                         {successRate}%
                       </span>
                     </td>
@@ -151,14 +149,13 @@ export default function ResultsTable({ results }: ResultsTableProps) {
                       <span className="text-red-600">{result.requests?.errors_5xx || 0}</span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-mono">
-                      {result.response_times?.p50?.toFixed(0) || 'N/A'} / 
-                      {result.response_times?.p95?.toFixed(0) || 'N/A'} / 
+                      {result.response_times?.p50?.toFixed(0) || 'N/A'} /
+                      {result.response_times?.p95?.toFixed(0) || 'N/A'} /
                       {result.response_times?.p99?.toFixed(0) || 'N/A'}ms
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={`text-sm font-medium ${
-                        parseFloat(result.balance_score || 0) >= 0.95 ? 'text-green-600' : 'text-red-600'
-                      }`}>
+                      <span className={`text-sm font-medium ${parseFloat(result.balance_score || 0) >= 0.95 ? 'text-green-600' : 'text-red-600'
+                        }`}>
                         {(parseFloat(result.balance_score || 0) * 100).toFixed(1)}%
                       </span>
                     </td>
@@ -171,7 +168,7 @@ export default function ResultsTable({ results }: ResultsTableProps) {
                       </button>
                     </td>
                   </tr>
-                  
+
                   {isExpanded && result.pods && (
                     <tr>
                       <td colSpan={9} className="px-4 py-4 bg-gray-50">
@@ -179,14 +176,14 @@ export default function ResultsTable({ results }: ResultsTableProps) {
                           <h4 className="text-sm font-semibold text-black uppercase tracking-wide">
                             Per-Pod Breakdown
                           </h4>
-                          
+
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {result.pods.map((pod: any, podIndex: number) => (
                               <div key={podIndex} className="bg-white border border-gray-200 rounded-lg p-4">
                                 <div className="font-mono text-xs font-semibold text-gray-700 mb-3">
                                   {pod.name}
                                 </div>
-                                
+
                                 <div className="space-y-2 text-sm">
                                   <div className="flex justify-between">
                                     <span className="text-gray-600">Requests:</span>

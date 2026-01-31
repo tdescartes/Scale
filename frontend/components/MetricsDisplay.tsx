@@ -22,13 +22,22 @@ export default function MetricsDisplay({ metrics }: MetricsDisplayProps) {
   const algorithm = metrics.metrics?.algorithm || 'unknown';
   const healthEvents = metrics.health_check_events || [];
   const failoverEvents = metrics.failover_events || [];
+  const scalingStatus = metrics.metrics?.scaling_status;
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-xl font-semibold text-black">Real-Time Metrics</h2>
-          <p className="text-xs text-gray-500 mt-1">Algorithm: <span className="font-mono font-medium">{algorithm}</span></p>
+          <p className="text-xs text-gray-500 mt-1">
+            Algorithm: <span className="font-mono font-medium">{algorithm}</span>
+            {scalingStatus && (
+              <span className="ml-3">
+                Pods: <span className="font-mono font-medium">{scalingStatus.current_pods}</span>
+                <span className="text-gray-400"> ({scalingStatus.min_pods}-{scalingStatus.max_pods})</span>
+              </span>
+            )}
+          </p>
         </div>
         <div className="flex items-center gap-4">
           <div className="text-right">
@@ -45,6 +54,23 @@ export default function MetricsDisplay({ metrics }: MetricsDisplayProps) {
           </div>
         </div>
       </div>
+
+      {scalingStatus && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-blue-700 mb-1">Auto-Scaling Active</h3>
+              <p className="text-xs text-blue-600">
+                Average load per pod: <span className="font-medium">{scalingStatus.avg_load_per_pod.toFixed(0)}</span> requests
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-blue-700">{scalingStatus.current_pods}</div>
+              <div className="text-xs text-blue-600">Active Pods</div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {pods.map((pod: any, index: number) => {
@@ -63,7 +89,7 @@ export default function MetricsDisplay({ metrics }: MetricsDisplayProps) {
                     <h3 className="font-semibold text-black text-sm">{pod.name}</h3>
                     <div className="flex items-center gap-2 mt-1">
                       <span className={`inline-block w-2 h-2 rounded-full ${statusColor === 'green' ? 'bg-green-500' :
-                          statusColor === 'red' ? 'bg-red-500' : 'bg-yellow-500'
+                        statusColor === 'red' ? 'bg-red-500' : 'bg-yellow-500'
                         }`}></span>
                       <span className="text-xs text-gray-500">{pod.health_status}</span>
                     </div>
@@ -102,13 +128,13 @@ export default function MetricsDisplay({ metrics }: MetricsDisplayProps) {
                   <div className="bg-gray-50 rounded-lg p-3">
                     <div className="text-xs font-medium text-gray-500 uppercase mb-1">CPU</div>
                     <div className={`text-base font-semibold ${pod.cpu_usage > 80 ? 'text-red-600' :
-                        pod.cpu_usage > 60 ? 'text-yellow-600' : 'text-green-600'
+                      pod.cpu_usage > 60 ? 'text-yellow-600' : 'text-green-600'
                       }`}>{pod.cpu_usage.toFixed(1)}%</div>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-3">
                     <div className="text-xs font-medium text-gray-500 uppercase mb-1">Memory</div>
                     <div className={`text-base font-semibold ${pod.memory_usage > 80 ? 'text-red-600' :
-                        pod.memory_usage > 60 ? 'text-yellow-600' : 'text-green-600'
+                      pod.memory_usage > 60 ? 'text-yellow-600' : 'text-green-600'
                       }`}>{pod.memory_usage.toFixed(1)}%</div>
                   </div>
                 </div>
@@ -144,7 +170,7 @@ export default function MetricsDisplay({ metrics }: MetricsDisplayProps) {
                   <div key={idx} className="flex justify-between items-center text-xs bg-white p-2 rounded">
                     <span className="font-mono text-gray-700">{event.pod}</span>
                     <span className={`px-2 py-0.5 rounded font-medium ${event.status === 'passed' ? 'bg-green-100 text-green-700' :
-                        event.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                      event.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
                       }`}>
                       {event.status}
                     </span>
