@@ -27,6 +27,7 @@ class K8sMonitor:
         self.scale_cooldown = 30  # Wait 30 seconds between scaling operations
         self.current_algorithm = "round_robin"  # Current load balancing algorithm
         self.failure_injection = None  # Current failure injection config
+        self.auto_scaling_enabled = True  # Dynamic pod scaling enabled by default
         
     async def get_metrics(self) -> Dict[str, Any]:
         """
@@ -101,9 +102,9 @@ class K8sMonitor:
                 "throughput_rps": requests / 60,  # requests per second
             })
         
-        # Auto-scaling logic based on average load per pod
+        # Auto-scaling logic based on average load per pod (only if enabled)
         current_time = time.time()
-        if current_time - self.last_scale_time >= self.scale_cooldown:
+        if self.auto_scaling_enabled and current_time - self.last_scale_time >= self.scale_cooldown:
             avg_requests_per_pod = total_requests / self.current_pod_count if self.current_pod_count > 0 else 0
             
             # Scale up if average load is high and we're not at max
@@ -132,6 +133,7 @@ class K8sMonitor:
                 "min_pods": self.min_pods,
                 "max_pods": self.max_pods,
                 "avg_load_per_pod": total_requests / self.current_pod_count if self.current_pod_count > 0 else 0,
+                "auto_scaling_enabled": self.auto_scaling_enabled,
             },
             "failure_injection": self.failure_injection
         }
@@ -282,3 +284,22 @@ class K8sMonitor:
                 self.failure_injection = None
                 return True
         return False
+    
+    def toggle_auto_scaling(self, enabled: bool) -> Dict[str, Any]:
+        """Enable or disable auto-scaling"""
+        self.auto_scaling_enabled = enabled
+        status = "enabled" if enabled else "disabled"
+        logger.info(f"Auto-scaling {status}")
+        
+        return {
+            "success": True,
+            "enabled": enabled,
+            "message": f"Dynamic pod scaling {status}",
+            "config": {
+                "min_pods": self.min_pods,
+                "max_pods": self.max_pods,
+                "scale_up_threshold": self.scale_up_threshold,
+                "scale_down_threshold": self.scale_down_threshold,
+                "cooldown": self.scale_cooldown
+            }
+        }

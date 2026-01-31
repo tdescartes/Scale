@@ -231,6 +231,18 @@ async def change_algorithm(config: Dict[str, Any]):
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
+@app.post("/api/autoscaling/toggle")
+async def toggle_autoscaling(config: Dict[str, Any]):
+    """Toggle dynamic pod auto-scaling"""
+    try:
+        enabled = config.get("enabled", True)
+        result = k8s_monitor.toggle_auto_scaling(enabled)
+        return result
+    except Exception as e:
+        logger.error(f"Error toggling auto-scaling: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+
 @app.post("/api/failure/inject")
 async def inject_failure(config: Dict[str, Any]):
     """Inject a failure scenario"""

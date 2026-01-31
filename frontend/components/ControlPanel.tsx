@@ -30,11 +30,11 @@ export default function ControlPanel({ onAlgorithmChange, onFailureInjection }: 
         duration: failureDuration,
         target: 'random',
       };
-      
+
       const response = await axios.post(`${API_CONFIG.apiUrl}/api/failure/inject`, config);
 
       setSuccess(response.data.result.message || 'Failure injected successfully');
-      
+
       if (onFailureInjection) {
         onFailureInjection(config);
       }
@@ -56,7 +56,7 @@ export default function ControlPanel({ onAlgorithmChange, onFailureInjection }: 
       });
 
       setSuccess(response.data.message || `Algorithm changed to ${algorithm}`);
-      
+
       if (onAlgorithmChange) {
         onAlgorithmChange(algorithm);
       }
@@ -68,20 +68,33 @@ export default function ControlPanel({ onAlgorithmChange, onFailureInjection }: 
     }
   };
 
-  const handleToggleAutoTuning = () => {
-    setAutoTuning(!autoTuning);
-    if (!autoTuning) {
-      setSuccess('Auto-tuning enabled - system will optimize load balancing automatically');
-    } else {
-      setSuccess('Auto-tuning disabled');
+  const handleToggleAutoTuning = async () => {
+    const newState = !autoTuning;
+    setAutoTuning(newState);
+
+    try {
+      const response = await axios.post(`${API_CONFIG.apiUrl}/api/autoscaling/toggle`, {
+        enabled: newState,
+      });
+
+      if (newState) {
+        setSuccess(`Dynamic pod scaling enabled - ${response.data.config.min_pods}-${response.data.config.max_pods} pods`);
+      } else {
+        setSuccess('Dynamic pod scaling disabled - pod count will remain fixed');
+      }
+    } catch (error: any) {
+      console.error('Error toggling auto-scaling:', error);
+      setError(error.response?.data?.error || 'Failed to toggle auto-scaling');
+      // Revert state on error
+      setAutoTuning(!newState);
     }
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6 h-full">
+    <div className="bg-white border border-gray-200 rounded-lg p-6">
       <h2 className="text-xl font-semibold text-black mb-6">Control Panel</h2>
 
-      <div className="space-y-6">
+      <div className="space-y-5">
         <div className="border border-gray-200 rounded p-4">
           <h3 className="text-sm font-semibold text-black mb-4 uppercase tracking-wide">
             Load Balancing Algorithm
@@ -184,28 +197,26 @@ export default function ControlPanel({ onAlgorithmChange, onFailureInjection }: 
           </div>
         </div>
 
-        <div className="border-t border-gray-200 pt-6">
-          <div className="border border-gray-200 rounded p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-black uppercase tracking-wide">
-                Auto-Tuning
-              </h3>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={autoTuning}
-                  onChange={handleToggleAutoTuning}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-black rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-              </label>
-            </div>
-            <p className="text-xs text-gray-600">
-              {autoTuning 
-                ? '✓ System is automatically optimizing load distribution and scaling'
-                : 'Enable to automatically adjust load balancer configuration for optimal performance'}
-            </p>
+        <div className="border border-gray-200 rounded p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-black uppercase tracking-wide">
+              Dynamic Pod Scaling
+            </h3>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={autoTuning}
+                onChange={handleToggleAutoTuning}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-black rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+            </label>
           </div>
+          <p className="text-xs text-gray-600">
+            {autoTuning
+              ? '✓ Pods auto-scale (2-10) based on traffic (800-1200 req/pod)'
+              : 'Enable automatic pod scaling based on traffic volume'}
+          </p>
         </div>
 
         {error && (

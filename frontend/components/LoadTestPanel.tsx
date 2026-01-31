@@ -75,41 +75,40 @@ export default function LoadTestPanel({ onTestStart, activeTest, onConfigChange 
   };
 
   return (
-    <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-gray-200/50">
+    <div className="bg-white border border-gray-200 rounded-lg p-6">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-          <span className="text-2xl">🚀</span>
-        </div>
-        <h2 className="text-3xl font-bold text-gray-800">Load Test Configuration</h2>
+        <h2 className="text-xl font-semibold text-black">Load Test Configuration</h2>
       </div>
 
-      <div className="space-y-6">{error && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg animate-slideIn">
-          <p className="text-red-700 text-sm font-medium">{error}</p>
+      {error && (
+        <div className="bg-red-50 border border-red-200 p-3 rounded mb-4">
+          <p className="text-red-700 text-sm">{error}</p>
         </div>
       )}
 
-        <div className="group">
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            🎯 Target URL
+      <div className="space-y-5">
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Target URL
           </label>
           <input
             type="text"
             value={targetUrl}
             onChange={(e) => setTargetUrl(e.target.value)}
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 group-hover:border-gray-400"
+            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-sm"
             placeholder="http://localhost:8080"
           />
         </div>
 
-        <div className="group">
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            📊 Scenario Type
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Scenario Type
           </label>
           <select
             value={scenario}
             onChange={(e) => setScenario(e.target.value)}
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white group-hover:border-gray-400"
+            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black focus:border-black bg-white text-sm"
           >
             <option value="high_traffic">High Traffic</option>
             <option value="spike">Traffic Spike</option>
@@ -118,9 +117,9 @@ export default function LoadTestPanel({ onTestStart, activeTest, onConfigChange 
           </select>
           <button
             onClick={handleGenerateScenario}
-            className="mt-3 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors duration-200 flex items-center gap-2"
+            className="mt-2 text-xs font-medium text-blue-600 hover:text-blue-800 transition-colors"
           >
-            <span>✨</span> Generate with AI
+            ✨ Generate with AI
           </button>
         </div>
 
@@ -183,20 +182,20 @@ export default function LoadTestPanel({ onTestStart, activeTest, onConfigChange 
           </div>
         </div>
 
-        <div className="flex gap-3 pt-4 border-t border-gray-200">
+        <div className="flex gap-3 pt-4 border-t border-gray-200 mt-5">
           <button
             onClick={handleStartTest}
             disabled={activeTest !== null || isLoading}
-            className="flex-1 bg-blue-600 text-white px-4 py-2.5 rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium text-sm transition-colors"
+            className="flex-1 bg-green-600 text-white px-4 py-2.5 rounded hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium text-sm transition-colors"
           >
-            {isLoading ? 'Starting...' : 'Start Test'}
+            {isLoading ? 'Starting...' : '▶ Start Test'}
           </button>
           <button
             onClick={handleStopTest}
             disabled={activeTest === null}
-            className="flex-1 bg-white border border-gray-300 text-black px-4 py-2.5 rounded hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed font-medium text-sm transition-colors"
+            className="flex-1 bg-red-600 border border-red-600 text-white px-4 py-2.5 rounded hover:bg-red-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-300 disabled:cursor-not-allowed font-medium text-sm transition-colors"
           >
-            Stop Test
+            ■ Stop Test
           </button>
         </div>
 

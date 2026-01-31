@@ -56,17 +56,30 @@ export default function MetricsDisplay({ metrics }: MetricsDisplayProps) {
       </div>
 
       {scalingStatus && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div className={`border rounded-lg p-4 mb-6 ${scalingStatus.auto_scaling_enabled
+            ? 'bg-blue-50 border-blue-200'
+            : 'bg-gray-50 border-gray-200'
+          }`}>
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-semibold text-blue-700 mb-1">Auto-Scaling Active</h3>
-              <p className="text-xs text-blue-600">
-                Average load per pod: <span className="font-medium">{scalingStatus.avg_load_per_pod.toFixed(0)}</span> requests
+              <h3 className={`text-sm font-semibold mb-1 ${scalingStatus.auto_scaling_enabled ? 'text-blue-700' : 'text-gray-700'
+                }`}>
+                {scalingStatus.auto_scaling_enabled ? '🔄 Auto-Scaling Active' : '⏸️ Fixed Pod Count'}
+              </h3>
+              <p className={`text-xs ${scalingStatus.auto_scaling_enabled ? 'text-blue-600' : 'text-gray-600'
+                }`}>
+                {scalingStatus.auto_scaling_enabled
+                  ? `Average load: ${scalingStatus.avg_load_per_pod.toFixed(0)} req/pod • Scale at ${800}-${1200} req/pod`
+                  : 'Dynamic scaling disabled - pod count will remain constant'}
               </p>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold text-blue-700">{scalingStatus.current_pods}</div>
-              <div className="text-xs text-blue-600">Active Pods</div>
+              <div className={`text-2xl font-bold ${scalingStatus.auto_scaling_enabled ? 'text-blue-700' : 'text-gray-700'
+                }`}>{scalingStatus.current_pods}</div>
+              <div className={`text-xs ${scalingStatus.auto_scaling_enabled ? 'text-blue-600' : 'text-gray-600'
+                }`}>
+                Active Pods ({scalingStatus.min_pods}-{scalingStatus.max_pods})
+              </div>
             </div>
           </div>
         </div>

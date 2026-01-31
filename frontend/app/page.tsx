@@ -15,7 +15,7 @@ export default function Home() {
   const [metrics, setMetrics] = useState<any>(null);
   const [testResults, setTestResults] = useState<any[]>([]);
   const [activeTest, setActiveTest] = useState<string | null>(null);
-  
+
   // Configuration states for scenario explainer
   const [testConfig, setTestConfig] = useState({
     users: 100,
@@ -23,7 +23,7 @@ export default function Home() {
     spawnRate: 10,
     scenario: 'high_traffic',
   });
-  
+
   const [controlConfig, setControlConfig] = useState({
     algorithm: 'round_robin',
     failureType: 'none',
@@ -141,7 +141,7 @@ export default function Home() {
               activeTest={activeTest}
               onConfigChange={handleTestConfigChange}
             />
-            <ControlPanel 
+            <ControlPanel
               onAlgorithmChange={handleAlgorithmChange}
               onFailureInjection={handleFailureInjection}
             />
