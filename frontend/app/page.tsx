@@ -5,6 +5,7 @@ import LoadTestPanel from '../components/LoadTestPanel';
 import MetricsDisplay from '../components/MetricsDisplay';
 import ResultsTable from '../components/ResultsTable';
 import ControlPanel from '../components/ControlPanel';
+import HistoricalChart from '../components/HistoricalChart';
 import { API_CONFIG } from '../lib/config';
 
 export default function Home() {
@@ -109,6 +110,10 @@ export default function Home() {
 
         <div className="mb-6">
           <MetricsDisplay metrics={metrics} />
+        </div>
+
+        <div className="mb-6">
+          <HistoricalChart />
         </div>
 
         <div>
