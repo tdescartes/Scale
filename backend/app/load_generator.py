@@ -129,25 +129,66 @@ class LoadGenerator:
         if test_id not in self.active_tests:
             return {"error": "Test not found"}
         
+        import random
+        
         # In a real implementation, this would return detailed metrics
-        # from the Locust stats
+        # from the Locust stats - now with enhanced metrics
+        total_requests = random.randint(9000, 11000)
+        failed = random.randint(30, 100)
+        successful = total_requests - failed
+        
+        # Per-pod breakdown
+        pods_breakdown = []
+        for i in range(3):
+            pod_requests = total_requests // 3 + random.randint(-200, 200)
+            pod_errors_4xx = random.randint(5, 20)
+            pod_errors_5xx = random.randint(0, 8)
+            pod_failed = pod_errors_4xx + pod_errors_5xx
+            
+            pods_breakdown.append({
+                "name": f"backend-pod-{i}",
+                "requests": pod_requests,
+                "successful": pod_requests - pod_failed,
+                "errors_4xx": pod_errors_4xx,
+                "errors_5xx": pod_errors_5xx,
+                "response_time_mean": random.uniform(40, 60),
+                "response_time_p50": random.uniform(35, 45),
+                "response_time_p90": random.uniform(55, 75),
+                "response_time_p95": random.uniform(70, 95),
+                "response_time_p99": random.uniform(100, 150),
+            })
+        
         return {
             "test_id": test_id,
             "status": self.active_tests[test_id]["status"],
+            "algorithm": "round_robin",
             "requests": {
-                "total": 10000,
-                "successful": 9950,
-                "failed": 50
+                "total": total_requests,
+                "successful": successful,
+                "failed": failed,
+                "errors_4xx": random.randint(30, 60),
+                "errors_5xx": random.randint(5, 20),
             },
             "response_times": {
-                "mean": 45.2,
-                "median": 42.0,
-                "p95": 78.5,
-                "p99": 125.3
+                "mean": random.uniform(40, 50),
+                "median": random.uniform(38, 45),
+                "p50": random.uniform(35, 45),
+                "p90": random.uniform(55, 75),
+                "p95": random.uniform(70, 95),
+                "p99": random.uniform(100, 150),
+                "min": random.uniform(10, 20),
+                "max": random.uniform(200, 300),
             },
             "rps": {
-                "mean": 166.7,
-                "max": 200.0,
-                "min": 150.0
-            }
+                "mean": total_requests / 60,
+                "max": (total_requests / 60) * 1.3,
+                "min": (total_requests / 60) * 0.7,
+            },
+            "pods": pods_breakdown,
+            "health_checks": {
+                "total": random.randint(50, 100),
+                "passed": random.randint(45, 98),
+                "failed": random.randint(0, 5),
+            },
+            "failover_events": random.randint(0, 3),
         }
