@@ -4,16 +4,16 @@ A comprehensive Load Balancer Simulator & Tester for Kubernetes, optimizing traf
 
 ## Overview
 
-**Scale** is a full-stack application designed to test, simulate, and optimize Kubernetes load balancers with real-time monitoring and intelligent scenario generation.
+**Scale** is a Next.js application designed to test, simulate, and optimize Kubernetes load balancers with real-time monitoring and intelligent scenario generation.
 
 ### Key Features
 
-- 🚀 **Load Testing**: Locust-based HTTP traffic generation with multiprocessing for parallel tests
+- 🚀 **Load Testing**: HTTP traffic simulation with configurable parameters
 - 📊 **Real-Time Metrics**: Live visualization of load distribution across backend pods
 - 🎯 **95% Balance Accuracy**: Advanced algorithms to ensure optimal traffic distribution
 - 🤖 **LLM-Generated Scenarios**: AI-powered high-traffic scenario generation
 - ⚠️ **Imbalance Detection**: Automatic alerts when load distribution falls below threshold
-- 🔧 **Auto-Tuning**: Intelligent load balancer configuration optimization
+- 🔧 **Auto-Scaling**: Intelligent pod scaling based on request load
 - 💥 **Failure Injection**: Chaos engineering capabilities for resilience testing
 - 📈 **Results Dashboard**: Comprehensive tables and charts for test analysis
 
@@ -21,215 +21,150 @@ A comprehensive Load Balancer Simulator & Tester for Kubernetes, optimizing traf
 
 ### Tech Stack
 
-- **Backend**: Python, FastAPI, Locust, Kubernetes client
-- **Frontend**: Next.js 14, React, TypeScript, Recharts
-- **Infrastructure**: Docker, Kubernetes, NGINX Ingress Controller
-- **Communication**: WebSocket for real-time metrics streaming
+- **Framework**: Next.js 14 with App Router
+- **Language**: TypeScript
+- **UI**: React, Tailwind CSS, Recharts
+- **Infrastructure**: Docker, Kubernetes
 
 ### Flow
 
 ```
-UI → Load Generation → Metrics Collection → Visualization
-     ↓
-Multiprocessing for Parallel Tests
-     ↓
-Real-time Balance Analysis (95% accuracy target)
+UI → API Routes → Metrics Service → Real-time Visualization
+                        ↓
+              Auto-scaling Logic
+                        ↓
+              Historical Data Tracking
 ```
 
 ## Quick Start
 
 ### Prerequisites
 
-- Python 3.11+
 - Node.js 20+
-- Docker & Docker Compose
-- Kubernetes cluster with NGINX Ingress Controller (optional, for production)
+- Docker & Docker Compose (optional)
+- Kubernetes cluster (optional, for production)
 
 ### Local Development
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/tdescartes/Scale.git
    cd Scale
    ```
 
-2. **Start with Docker Compose**
+2. **Install dependencies**
+
    ```bash
-   docker-compose up --build
+   cd frontend
+   npm install
    ```
 
-3. **Access the application**
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:8000
-   - API Docs: http://localhost:8000/docs
+3. **Run the development server**
 
-### Manual Setup
+   ```bash
+   npm run dev
+   ```
 
-#### Backend
+4. **Access the application**
+   - Application: http://localhost:3000
 
-```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Run backend
-cd backend
-python main.py
-```
-
-#### Frontend
+### Docker Deployment
 
 ```bash
-# Install dependencies
-cd frontend
-npm install
+# Build and run with Docker Compose
+docker-compose up --build
 
-# Run development server
-npm run dev
-```
-
-## Usage
-
-### Running a Load Test
-
-1. Open the web interface at http://localhost:3000
-2. Configure test parameters:
-   - **Target URL**: The endpoint to test
-   - **Scenario Type**: Choose from pre-defined or LLM-generated scenarios
-   - **Concurrent Users**: Adjust the slider (10-1000 users)
-   - **Spawn Rate**: Users per second (1-100)
-   - **Duration**: Test duration in seconds (10-600)
-3. Click "Start Test" to begin
-4. Monitor real-time metrics and balance score
-5. View results in the Results Table after completion
-
-### Generating Scenarios with LLM
-
-1. Select a scenario type (High Traffic, Spike, Sustained, Gradual Ramp)
-2. Click "Generate with LLM"
-3. The system will populate optimal test parameters
-4. Adjust as needed and start the test
-
-### Failure Injection
-
-1. Navigate to the Control Panel
-2. Select failure type:
-   - **Latency**: Inject artificial delays
-   - **Error Injection**: Force error responses
-   - **Pod Failure**: Simulate pod crashes
-   - **Network Partition**: Simulate network issues
-3. Set severity (Low/Medium/High) and duration
-4. Click "Inject Failure" to activate
-
-### Auto-Tuning
-
-Click "Enable Auto-Tuning" to let the system automatically adjust load balancer configuration to maintain 95% balance accuracy.
-
-## Kubernetes Deployment
-
-```bash
-# Build images
-docker build -t scale-backend:latest -f Dockerfile.backend .
-docker build -t scale-frontend:latest -f Dockerfile.frontend .
-
-# Deploy to Kubernetes
-kubectl apply -f k8s/
-
-# Verify deployment
-kubectl get pods
-kubectl get services
-kubectl get ingress
+# Or build manually
+docker build -t scale-app .
+docker run -p 3000:3000 scale-app
 ```
 
 ## API Endpoints
 
-- `GET /health` - Health check
-- `POST /api/load-test/start` - Start a load test
-- `POST /api/load-test/stop/{test_id}` - Stop a running test
-- `GET /api/load-test/status/{test_id}` - Get test status
-- `GET /api/metrics` - Get current load balancer metrics
-- `POST /api/scenario/generate` - Generate LLM-based scenario
-- `POST /api/failure/inject` - Inject failure scenario
-- `GET /api/results/{test_id}` - Get detailed test results
-- `WS /ws/metrics` - WebSocket for real-time metrics
+All API routes are built into the Next.js application:
 
-## Results & Performance
+| Endpoint                       | Method | Description                        |
+| ------------------------------ | ------ | ---------------------------------- |
+| `/api/metrics`                 | GET    | Get current metrics and pod status |
+| `/api/metrics/history`         | GET    | Get historical metrics data        |
+| `/api/algorithm/change`        | POST   | Change load balancing algorithm    |
+| `/api/autoscaling/toggle`      | POST   | Toggle auto-scaling on/off         |
+| `/api/failure/inject`          | POST   | Inject failure scenarios           |
+| `/api/load-test/start`         | POST   | Start a load test                  |
+| `/api/load-test/stop/[testId]` | POST   | Stop a running load test           |
+| `/api/scenario/generate`       | POST   | Generate test scenarios            |
 
-The system achieves:
-- ✅ **95% balance accuracy** across backend pods
-- ⚡ Real-time metrics updates (1 second interval)
-- 🎯 Accurate load distribution detection
-- 📊 Comprehensive performance analytics
-- 🔄 Parallel test execution with multiprocessing
+## Features
+
+### Auto-Scaling
+
+The application automatically scales pods based on request load:
+
+- **Scale Up**: When avg requests > 1200/pod (adds 1 pod, max 10)
+- **Scale Down**: When avg requests < 800/pod (removes 1 pod, min 2)
+- **Cooldown**: 10-second cooldown between scaling operations
+
+### Load Balancing Algorithms
+
+- **Round Robin**: Distributes requests evenly across pods
+- **Least Connections**: Routes to pod with fewest active requests
+- **Random**: Random pod selection
+- **IP Hash**: Consistent hashing based on client IP
+- **Weighted Round Robin**: Weighted distribution
+
+### Failure Injection
+
+Test resilience with chaos engineering:
+
+- **Pod Failure**: Simulate pod crashes
+- **Network Latency**: Add artificial delays
+- **CPU Spike**: Simulate resource exhaustion
+- **Memory Pressure**: Test memory limits
+
+## Project Structure
+
+```
+Scale/
+├── frontend/
+│   ├── app/
+│   │   ├── api/           # API routes
+│   │   ├── globals.css    # Global styles
+│   │   ├── layout.tsx     # Root layout
+│   │   └── page.tsx       # Main dashboard
+│   ├── components/        # React components
+│   ├── hooks/             # Custom React hooks
+│   ├── lib/               # Utilities and services
+│   │   ├── api.ts         # API client
+│   │   ├── config.ts      # Configuration
+│   │   ├── metricsService.ts  # Core metrics service
+│   │   └── utils.ts       # Utility functions
+│   └── package.json
+├── k8s/                   # Kubernetes manifests
+│   ├── deployment.yaml    # App deployment
+│   └── ingress.yaml       # Ingress configuration
+├── docker-compose.yml     # Docker Compose config
+├── Dockerfile             # Docker build config
+└── README.md
+```
 
 ## Configuration
 
-### Environment Variables
+Environment variables (optional):
 
-Backend (`backend/.env`):
-```env
-OPENAI_API_KEY=your_api_key  # Optional, for LLM scenario generation
-K8S_NAMESPACE=default
-K8S_CONFIG_PATH=~/.kube/config
-```
-
-Frontend (`frontend/.env.local`):
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_WS_URL=ws://localhost:8000
-```
-
-## Development
-
-### Backend Structure
-
-```
-backend/
-├── app/
-│   ├── load_generator.py      # Locust-based load testing
-│   ├── k8s_monitor.py          # Kubernetes metrics collection
-│   ├── balance_analyzer.py     # Load balance analysis (95% accuracy)
-│   ├── scenario_generator.py   # LLM scenario generation
-│   └── failure_injector.py     # Chaos engineering
-├── main.py                     # FastAPI application
-└── tests/                      # Backend tests
-```
-
-### Frontend Structure
-
-```
-frontend/
-├── app/
-│   ├── page.tsx               # Main dashboard
-│   ├── layout.tsx             # App layout
-│   └── globals.css            # Global styles
-├── components/
-│   ├── LoadTestPanel.tsx      # Load test configuration
-│   ├── MetricsDisplay.tsx     # Real-time metrics visualization
-│   ├── ResultsTable.tsx       # Test results display
-│   └── ControlPanel.tsx       # Failure injection & auto-tuning
-└── lib/                       # Utility functions
-```
-
-## Testing
-
-```bash
-# Backend tests
-cd backend
-pytest tests/
-
-# Frontend tests
-cd frontend
-npm test
-```
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+| Variable   | Default       | Description      |
+| ---------- | ------------- | ---------------- |
+| `PORT`     | `3000`        | Application port |
+| `NODE_ENV` | `development` | Environment mode |
 
 ## License
 
-See [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](LICENSE) for details.
 
-## Support
+## Contributing
 
-For issues and questions, please open an issue on GitHub.
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
