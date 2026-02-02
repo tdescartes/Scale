@@ -8,20 +8,13 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: scale.local
-    http:
-      paths:
-      - path: /api
-        pathType: Prefix
-        backend:
-          service:
-            name: scale-backend
-            port:
-              number: 8000
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: scale-frontend
-            port:
-              number: 80
+    - host: scale.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: scale-app
+                port:
+                  number: 80
