@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scale-app
+  labels:
+    app: scale-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scale-app
+  template:
+    metadata:
+      labels:
+        app: scale-app
+    spec:
+      containers:
+        - name: app
+          image: scale-app:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: "production"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: scale-app
+spec:
+  selector:
+    app: scale-app
+  ports:
+    - port: 80
+      targetPort: 3000
+  type: LoadBalancer
