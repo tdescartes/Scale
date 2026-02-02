@@ -1,24 +1,12 @@
 services:
-  backend:
+  app:
     build:
       context: .
-      dockerfile: Dockerfile.backend
-    ports:
-      - "8000:8000"
-    environment:
-      - PYTHONUNBUFFERED=1
-    # Removed volume mount to avoid overwriting container code
-    networks:
-      - scale-network
-
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile.frontend
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
-    depends_on:
-      - backend
+    environment:
+      - NODE_ENV=production
     networks:
       - scale-network
 
