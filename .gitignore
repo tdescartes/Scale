@@ -1,8 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
-/frontend/node_modules
+node_modules/
 /.pnp
 .pnp.js
 
@@ -10,13 +9,11 @@
 /coverage
 
 # next.js
-/.next/
-/frontend/.next/
+.next/
 /out/
 
 # production
 /build
-/frontend/build
 
 # misc
 .DS_Store
@@ -38,16 +35,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-ENV/
-build/
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
 develop-eggs/
 dist/
 downloads/
